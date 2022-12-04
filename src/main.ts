@@ -1,4 +1,5 @@
 import p5 from "p5";
+import logs from "./sample_packet_log.json";
 
 const BG_COLOR = "#171d21";
 const BUBBLE_COLOR = "#77acb5";
@@ -44,7 +45,7 @@ class NodeStripe {
 }
 
 class PacketSprite {
-  constructor(p: p5, src: Position, dst: Position) {
+  constructor(p: p5, src: Position, dst: Position, timestamp?: number) {
     this.p = p;
     this.pos = { ...src };
     this.src = { ...src };
@@ -53,6 +54,7 @@ class PacketSprite {
     this.animationSteps = 200; // src-dst間の距離で可変にする
     this.step = 0; // 現在のステップ数は0で初期化
     this.isFinishd = false;
+    this.timestamp = timestamp;
   }
   p: p5;
   pos: Position;
@@ -62,6 +64,7 @@ class PacketSprite {
   animationSteps: number;
   step: number;
   isFinishd: boolean;
+  timestamp?: number;
 
   updatePos() {
     const t = this.step / this.animationSteps;
@@ -82,32 +85,30 @@ class PacketSprite {
 }
 
 const sketch = (p: p5) => {
-  const s1 = new NodeStripe(
-    p,
-    "s1",
-    { x: 100, y: 100 },
-    { width: 100, height: 50 }
-  );
-  const s2 = new NodeStripe(
-    p,
-    "s2",
-    { x: 800, y: 100 },
-    { width: 100, height: 50 }
-  );
-  const s3 = new NodeStripe(
-    p,
-    "s3",
-    { x: 100, y: 500 },
-    { width: 100, height: 50 }
-  );
-  const s4 = new NodeStripe(
-    p,
-    "s4",
-    { x: 800, y: 500 },
-    { width: 100, height: 50 }
-  );
+  const servers = [
+    new NodeStripe(p, "s1", { x: 100, y: 100 }, { width: 100, height: 50 }),
+    new NodeStripe(p, "s2", { x: 800, y: 100 }, { width: 100, height: 50 }),
+    new NodeStripe(p, "s3", { x: 100, y: 500 }, { width: 100, height: 50 }),
+    new NodeStripe(p, "s4", { x: 800, y: 500 }, { width: 100, height: 50 }),
+  ];
+  let waitingPackets: PacketSprite[] = logs.map((log) => {
+    const src = servers.find((s) => s.name === log.src);
+    const dst = servers.find((s) => s.name === log.dst);
+    if (src == undefined || dst == undefined) {
+      console.error();
+      throw new Error(
+        `Cannot find server name src ${log.src} and/or dst ${log.dst}`
+      );
+    }
+    return new PacketSprite(
+      p,
+      src.getCenterPos(),
+      dst.getCenterPos(),
+      log.timestamp
+    );
+  });
   let packets: PacketSprite[] = [];
-  let time: number = 0;
+  let time: number = 1670170000;
 
   /** 初期化処理 */
   p.setup = () => {
@@ -117,7 +118,16 @@ const sketch = (p: p5) => {
   /** フレームごとの描画処理 */
   p.draw = () => {
     p.background(p.color(BG_COLOR));
+    p.text(time, 100, 200);
 
+    // Check newly generated packets
+    if (waitingPackets.length > 0 && waitingPackets[0].timestamp! <= time) {
+      console.log(waitingPackets.length);
+      const p = waitingPackets.shift();
+      if (p) {
+        packets.push(p);
+      }
+    }
     // Draw Packets
     packets.forEach((pkt) => {
       pkt.updatePos();
@@ -126,34 +136,11 @@ const sketch = (p: p5) => {
     // Remove packets which have arrived to destination
     packets = packets.filter((pkt) => !pkt.isFinishd);
 
-    if (Math.random() > 0.96) {
-      packets.push(new PacketSprite(p, s1.getCenterPos(), s2.getCenterPos()));
-    }
-    if (Math.random() > 0.95) {
-      packets.push(new PacketSprite(p, s2.getCenterPos(), s3.getCenterPos()));
-    }
-    if (Math.random() > 0.99) {
-      packets.push(new PacketSprite(p, s4.getCenterPos(), s3.getCenterPos()));
-    }
-    if (Math.random() > 0.95) {
-      packets.push(new PacketSprite(p, s1.getCenterPos(), s4.getCenterPos()));
-    }
-    if (Math.random() > 0.99) {
-      packets.push(new PacketSprite(p, s1.getCenterPos(), s3.getCenterPos()));
-    }
-    if (Math.random() > 0.92) {
-      packets.push(new PacketSprite(p, s3.getCenterPos(), s2.getCenterPos()));
-    }
-    if (Math.random() > 0.92) {
-      packets.push(new PacketSprite(p, s4.getCenterPos(), s2.getCenterPos()));
-    }
-
     // Draw Nodes
-    s1.draw();
-    s2.draw();
-    s3.draw();
-    s4.draw();
-    time++;
+    servers.forEach((s) => {
+      s.draw();
+    });
+    time += 1;
   };
 };
 
