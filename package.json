@@ -1,0 +1,28 @@
+{
+  "name": "pktviz",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "parcel src/index.html --open",
+    "build": "parcel build src/index.html",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/takashimakazuki/pktviz.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/takashimakazuki/pktviz/issues"
+  },
+  "homepage": "https://github.com/takashimakazuki/pktviz#readme",
+  "devDependencies": {
+    "@types/p5": "^1.4.3",
+    "parcel": "^2.8.0"
+  },
+  "dependencies": {
+    "p5": "^1.5.0"
+  }
+}
