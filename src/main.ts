@@ -30,6 +30,9 @@ class NodeStripe {
     this.p.color(BUBBLE_COLOR);
     this.p.stroke(BUBBLE_COLOR);
     this.p.rect(this.pos.x, this.pos.y, this.size.width, this.size.height);
+    this.p.textAlign(this.p.CENTER, this.p.CENTER);
+    this.p.textSize(this.size.width / 5);
+    this.p.text(this.name, this.getCenterPos().x, this.getCenterPos().y);
   }
 
   getCenterPos(): Position {
@@ -104,21 +107,16 @@ const sketch = (p: p5) => {
     { width: 100, height: 50 }
   );
   let packets: PacketSprite[] = [];
+  let time: number = 0;
 
   /** 初期化処理 */
   p.setup = () => {
     p.createCanvas(p.windowWidth, p.windowHeight);
-    p.background(p.color(BG_COLOR));
   };
 
   /** フレームごとの描画処理 */
   p.draw = () => {
     p.background(p.color(BG_COLOR));
-    // Draw Nodes
-    s1.draw();
-    s2.draw();
-    s3.draw();
-    s4.draw();
 
     // Draw Packets
     packets.forEach((pkt) => {
@@ -149,6 +147,13 @@ const sketch = (p: p5) => {
     if (Math.random() > 0.92) {
       packets.push(new PacketSprite(p, s4.getCenterPos(), s2.getCenterPos()));
     }
+
+    // Draw Nodes
+    s1.draw();
+    s2.draw();
+    s3.draw();
+    s4.draw();
+    time++;
   };
 };
 
