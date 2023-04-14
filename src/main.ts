@@ -1,5 +1,6 @@
 import p5 from "p5";
-import logs from "./sample_packet_log.json";
+import pcapLogs1 from "./h1.json";
+import { convertPktLog, PacketLog } from "./utils"
 
 const BG_COLOR = "#171d21";
 const BUBBLE_COLOR = "#77acb5";
@@ -84,13 +85,26 @@ class PacketSprite {
   }
 }
 
+const getServerNames = (logs: PacketLog[]) => {
+  const set =  new Set(logs.map(log => log.src))
+  return [...set];
+}
+
 const sketch = (p: p5) => {
-  const servers = [
-    new NodeStripe(p, "s1", { x: 100, y: 100 }, { width: 100, height: 50 }),
-    new NodeStripe(p, "s2", { x: 800, y: 100 }, { width: 100, height: 50 }),
-    new NodeStripe(p, "s3", { x: 100, y: 500 }, { width: 100, height: 50 }),
-    new NodeStripe(p, "s4", { x: 800, y: 500 }, { width: 100, height: 50 }),
-  ];
+  // const servers = [
+  //   new NodeStripe(p, "s1", { x: 100, y: 100 }, { width: 100, height: 50 }),
+  //   new NodeStripe(p, "s2", { x: 800, y: 100 }, { width: 100, height: 50 }),
+  //   new NodeStripe(p, "s3", { x: 100, y: 500 }, { width: 100, height: 50 }),
+  //   new NodeStripe(p, "s4", { x: 800, y: 500 }, { width: 100, height: 50 }),
+  // ];
+
+  const logs = convertPktLog(pcapLogs1)
+
+  const servers = getServerNames(logs).map((serverName, index) => {
+    return new NodeStripe(p, serverName, {x: 200, y: index*400+100}, { width: 100, height: 50 })
+  })
+
+
   let waitingPackets: PacketSprite[] = logs.map((log) => {
     const src = servers.find((s) => s.name === log.src);
     const dst = servers.find((s) => s.name === log.dst);
@@ -108,7 +122,7 @@ const sketch = (p: p5) => {
     );
   });
   let packets: PacketSprite[] = [];
-  let time: number = 1670170000;
+  let time: number = waitingPackets[0].timestamp!;
 
   /** 初期化処理 */
   p.setup = () => {
@@ -118,7 +132,7 @@ const sketch = (p: p5) => {
   /** フレームごとの描画処理 */
   p.draw = () => {
     p.background(p.color(BG_COLOR));
-    p.text(time, 100, 200);
+    p.text(time, 500, 200);
 
     // Check newly generated packets
     if (waitingPackets.length > 0 && waitingPackets[0].timestamp! <= time) {
@@ -140,7 +154,7 @@ const sketch = (p: p5) => {
     servers.forEach((s) => {
       s.draw();
     });
-    time += 1;
+    time += 0.0001;
   };
 };
 
